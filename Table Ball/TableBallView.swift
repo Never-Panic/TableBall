@@ -35,8 +35,11 @@ struct TableBallView: View {
                     if !hasStart {
                         ZStack{
                             Color.yellow
-                            Text("Press Start")
+                            Text("Press Start or Double Tap")
                         }
+                        .onTapGesture(count: 2, perform: {
+                            tableBall.startGame()
+                        })
                     }
                 }
                 .border(Color.black)
@@ -47,15 +50,12 @@ struct TableBallView: View {
             HStack{
                 if hasStart {
                     Button("restart") {
-                        tableBall.resetGame()
-                        tableBall.hasStart = false
+                        tableBall.restartGame()
                     }
                     .padding(.horizontal)
                 } else {
                     Button("start") {
-                        tableBall.resetGame()
-                        tableBall.startAccelerometers()
-                        tableBall.hasStart = true
+                        tableBall.startGame()
                     }
                     .padding(.horizontal)
                 }
@@ -63,6 +63,7 @@ struct TableBallView: View {
             }
         }
     }
+    
     
     // MARK: - Drag Gesture
     

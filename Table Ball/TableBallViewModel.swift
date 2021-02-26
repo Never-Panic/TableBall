@@ -67,6 +67,19 @@ class TableBallViewModel: ObservableObject {
        }
     }
     
+    // start and restart game
+    
+  
+    func startGame () {
+        resetGame()
+        startAccelerometers()
+        hasStart = true
+    }
+    
+    func restartGame () {
+        resetGame()
+        hasStart = false
+    }
     
     func resetGame() {
         
