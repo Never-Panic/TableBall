@@ -8,7 +8,9 @@
 import Foundation
 
 struct TableBall {
-    var position: Vector2f
+    var position: Vector2f // the ball's center position
     var speed: Vector2f
     var hole: Vector2f
+    var holeSize: Double
+    var ballSize: Double
 }

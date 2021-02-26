@@ -8,31 +8,31 @@
 import SwiftUI
 
 struct TableBallView: View {
-
+  
     @ObservedObject var tableBall = TableBallViewModel()
     
     
-    var body: some View {
+     var body: some View {
         VStack{
             GeometryReader(content: { geometry in
                 ZStack {
                     ZStack{
                         Color.white
-                        Circle()
+                        Circle() // hole
                             .foregroundColor(.black)
-                            .frame(width: holeHeight, height: holeHeight)
+                            .frame(width: holeSize, height: holeSize)
                             .position(tableBall.holePosition)
-                            .offset(x: holeOffset, y: holeOffset)
                         
-                        Circle()
+                        Circle() // ball
                             .foregroundColor(.green)
-                            .frame(width: ballHeight, height: ballHeight)
+                            .frame(width: ballSize, height: ballSize)
                             .position(ballPosition)
-                            .offset(x: ballOffset, y: ballOffset)
+
                     }
                     .gesture(dragGesrure())
+                    .clipped()
                     
-                    if !tableBall.hasStart {
+                    if !hasStart {
                         ZStack{
                             Color.yellow
                             Text("Press Start")
@@ -41,29 +41,30 @@ struct TableBallView: View {
                 }
                 .border(Color.black)
                 .onAppear{
-                    tableBall.setBoundSize(getBoundSize(originSize: geometry.size))
+                    tableBall.setBoundSize(geometry.size)
                 }
             })
             HStack{
-                Button("start") {
-                    tableBall.resetGame()
-                    tableBall.startAccelerometers()
-                    tableBall.hasStart = true
+                if hasStart {
+                    Button("restart") {
+                        tableBall.resetGame()
+                        tableBall.hasStart = false
+                    }
+                    .padding(.horizontal)
+                } else {
+                    Button("start") {
+                        tableBall.resetGame()
+                        tableBall.startAccelerometers()
+                        tableBall.hasStart = true
+                    }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
-                Button("reset"){
-                    tableBall.resetGame()
-                    tableBall.hasStart = false
-                }
-                .padding(.horizontal)
+                
             }
         }
     }
     
-    private func getBoundSize(originSize size: CGSize) -> CGSize {
-        CGSize(width: size.width - ballHeight, height: size.height - ballHeight)
-    }
-    
+    // MARK: - Drag Gesture
     
     @GestureState private var gestureDragPosition: CGPoint = .zero
     private var ballPosition: CGPoint {
@@ -77,25 +78,34 @@ struct TableBallView: View {
         
         return DragGesture()
             .updating($gestureDragPosition) { (value, gestureDragPosition, transaction) in
-                tableBall.isDraging = true
+                if hasStart {
+                    tableBall.isDragging = true
+                }
                 gestureDragPosition = value.location
                 tableBall.steadyBallPosition = gestureDragPosition
             }
             .onEnded { value in
-                if tableBall.hasStart {
+                if hasStart {
                     tableBall.steadyBallPosition = value.location
                     tableBall.startAccelerometers()
                     tableBall.speed = .zero
                 }
-                tableBall.isDraging = false
+                tableBall.isDragging = false
             }
     }
     
     // MARK: - Drawing Constant
     
-    private let ballHeight: CGFloat = 30
-    private var ballOffset: CGFloat { ballHeight / 2 }
-    private let holeHeight: CGFloat = 40
-    private var holeOffset: CGFloat { holeHeight / 2 }
+    private var hasStart: Bool {
+        get { tableBall.hasStart }
+    }
+    private var isDragging:Bool {
+        get { tableBall.isDragging }
+    }
+    
+    private var ballSize: CGFloat { tableBall.ballSize }
+    private var holeSize: CGFloat { tableBall.holeSize }
+    private var ballOffset: CGFloat { ballSize / 2 }
+    private var holeOffset: CGFloat { holeSize / 2 }
 }
 

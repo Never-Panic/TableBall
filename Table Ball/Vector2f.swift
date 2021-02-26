@@ -10,6 +10,9 @@ import Foundation
 struct Vector2f {
     var x: Double
     var y: Double
+    var center: Vector2f {
+        Vector2f(x: x/2, y: y/2)
+    }
     
     static func + (lhs: Vector2f, rhs: Vector2f) -> Vector2f {
         Vector2f(x: lhs.x + rhs.x, y: lhs.y + rhs.y)

@@ -10,11 +10,17 @@ import CoreMotion
 import AudioToolbox
 
 class TableBallViewModel: ObservableObject {
-    @Published var tableBall = TableBall(position: Vector2f(x: 0, y: 0), speed: Vector2f(x: 0, y: 0),hole: Vector2f(x: 100, y: 312))
-    @Published var hasStart = false
-    var isDraging = false
+    @Published var tableBall: TableBall
+    @Published var hasStart: Bool = false
+    @Published var isDragging: Bool = false
     
     private var boundSize: Vector2f?
+    
+    init() {
+        // random position of the ball and the hole
+        self.tableBall = TableBall(position: Vector2f(x: .infinity, y: .infinity), speed: .zero,hole: Vector2f(x: .infinity, y: .infinity), holeSize: 40, ballSize: 30)
+       
+    }
     
     // MARK: - Intend(s)
     
@@ -45,7 +51,7 @@ class TableBallViewModel: ObservableObject {
                 let y = -(data.acceleration.y * self.motionFactor)
 //                let z = data.acceleration.z
                 // Updates ball's Position and Speed
-                if !self.isDraging {
+                if !self.isDragging {
                     self.tableBall.speed = self.tableBall.speed + Vector2f(x: x, y: y)
                     self.tableBall.position = self.tableBall.position + self.tableBall.speed
                     self.checkIfOutOfBound()
@@ -63,13 +69,21 @@ class TableBallViewModel: ObservableObject {
     
     
     func resetGame() {
+        
+        hasStart = false
+        isDragging = false
         if motion.isAccelerometerActive {
             motion.stopAccelerometerUpdates()
         }
         timer?.invalidate()
-        tableBall.position = .zero
+        if let boundSize = self.boundSize {
+            tableBall.position = boundSize.center
+            tableBall.hole = Vector2f(x: Double.random(in: tableBall.holeSize/2...boundSize.x-tableBall.holeSize/2), y: Double.random(in: tableBall.holeSize/2...boundSize.y-tableBall.holeSize/2))
+        }
+
         tableBall.speed = .zero
         stopRadarSound()
+   
     }
     
     func checkIfOutOfBound() {
@@ -77,32 +91,32 @@ class TableBallViewModel: ObservableObject {
         let speedCutDownFactor:Double = 0.5
         
         if let size = boundSize {
-            if tableBall.position.x < 0 {
-                tableBall.position.x = 0
+            if tableBall.position.x < tableBall.ballSize/2 {
+                tableBall.position.x = tableBall.ballSize/2
                 tableBall.speed.x *= -speedCutDownFactor
                 if abs(tableBall.speed.x) >= miniOffset {
-                    vibrates()
+                    hitBoundSound()
                 }
             }
-            if tableBall.position.x > size.x {
-                tableBall.position.x = size.x
+            if tableBall.position.x > size.x - tableBall.ballSize/2 {
+                tableBall.position.x = size.x - tableBall.ballSize/2
                 tableBall.speed.x *= -speedCutDownFactor
                 if abs(tableBall.speed.x) >= miniOffset {
-                    vibrates()
+                    hitBoundSound()
                 }
             }
-            if tableBall.position.y < 0 {
-                tableBall.position.y = 0
+            if tableBall.position.y < tableBall.ballSize/2 {
+                tableBall.position.y = tableBall.ballSize/2
                 tableBall.speed.y *= -speedCutDownFactor
                 if abs(tableBall.speed.y) >= miniOffset {
-                    vibrates()
+                    hitBoundSound()
                 }
             }
-            if tableBall.position.y > size.y {
-                tableBall.position.y = size.y
+            if tableBall.position.y > size.y - tableBall.ballSize/2 {
+                tableBall.position.y = size.y - tableBall.ballSize/2
                 tableBall.speed.y *= -speedCutDownFactor
                 if abs(tableBall.speed.y) >= miniOffset {
-                    vibrates()
+                    hitBoundSound()
                 }
             }
             
@@ -125,7 +139,6 @@ class TableBallViewModel: ObservableObject {
         
         
         if distence < 20 {
-            hasStart = false
             resetGame()
             AudioServicesPlaySystemSound(SystemSoundID(1303))
         }
@@ -162,6 +175,7 @@ class TableBallViewModel: ObservableObject {
         }
     }
     
+    // Radar Sound implementation
     private var soundTimer: Timer?
     func playRadarSound (frequency: Double) {
         stopRadarSound()
@@ -177,7 +191,7 @@ class TableBallViewModel: ObservableObject {
         }
     }
     
-    func vibrates () {
+    func hitBoundSound () {
         let vibrates = SystemSoundID(1519)
         let hitSound = SystemSoundID(1113)
         AudioServicesPlaySystemSound(vibrates)
@@ -210,6 +224,9 @@ class TableBallViewModel: ObservableObject {
             tableBall.speed = newValue
         }
     }
+    
+    var ballSize: CGFloat { CGFloat(tableBall.ballSize) }
+    var holeSize: CGFloat { CGFloat(tableBall.holeSize) }
 }
 
 
